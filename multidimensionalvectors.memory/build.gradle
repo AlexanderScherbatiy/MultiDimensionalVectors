@@ -1,0 +1,13 @@
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    implementation  project(':multidimensionalvectors.core')
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
