@@ -1,4 +1,4 @@
 package multidimensionalvectors.core;
 
-public interface MDVectorType {
+public interface MDVectorType extends MDType {
 }
