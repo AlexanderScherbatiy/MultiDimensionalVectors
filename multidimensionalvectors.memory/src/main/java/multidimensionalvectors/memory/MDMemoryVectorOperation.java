@@ -1,45 +1,31 @@
 package multidimensionalvectors.memory;
 
+import multidimensionalvectors.core.MDVector;
+import multidimensionalvectors.core.MDVectorType;
+import multidimensionalvectors.core.MDVectorOperation;
+import multidimensionalvectors.core.MDZeroVectorType;
+import multidimensionalvectors.core.MDUnitVectorType;
 import multidimensionalvectors.core.MDUnsupportedClassException;
 import multidimensionalvectors.core.MDUnsupportedTypeException;
-import multidimensionalvectors.core.MDVector;
-import multidimensionalvectors.core.MDVectorBaseType;
-import multidimensionalvectors.core.MDVectorOperation;
-import multidimensionalvectors.core.MDVectorType;
 
 public class MDMemoryVectorOperation implements MDVectorOperation {
 
     @Override
-    public MDVector create(MDVectorType type, int dimension, double... values) {
+    public MDVector create(MDVectorType vectorType) {
 
-        if (type instanceof MDVectorBaseType) {
-            switch ((MDVectorBaseType) type) {
-                case ZERO:
-                    return new MDMemoryVector(dimension);
-                default:
-                    throw new MDUnsupportedTypeException(type);
-            }
+        if (vectorType instanceof MDZeroVectorType) {
+            MDZeroVectorType zeroVectorType = (MDZeroVectorType) vectorType;
+            return new MDMemoryVector(zeroVectorType.getDimension());
         }
 
-        throw new MDUnsupportedTypeException(type);
-    }
-
-    @Override
-    public MDVector create(MDVectorType type, int dimension, int index, double... values) {
-        if (type instanceof MDVectorBaseType) {
-            switch ((MDVectorBaseType) type) {
-                case UNIT: {
-                    MDMemoryVector vector = new MDMemoryVector(dimension);
-                    vector.values[index] = 1.0;
-                    return vector;
-
-                }
-                default:
-                    throw new MDUnsupportedTypeException(type);
-            }
+        if (vectorType instanceof MDUnitVectorType) {
+            MDUnitVectorType unitVectorType = (MDUnitVectorType) vectorType;
+            MDMemoryVector vector = new MDMemoryVector(unitVectorType.getDimension());
+            vector.values[unitVectorType.getIndex()] = 1.0;
+            return vector;
         }
 
-        throw new MDUnsupportedTypeException(type);
+        throw new MDUnsupportedTypeException(vectorType);
     }
 
     @Override
