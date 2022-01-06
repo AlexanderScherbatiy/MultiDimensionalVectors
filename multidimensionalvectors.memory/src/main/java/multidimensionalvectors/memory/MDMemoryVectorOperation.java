@@ -1,6 +1,5 @@
 package multidimensionalvectors.memory;
 
-import multidimensionalvectors.core.MDException;
 import multidimensionalvectors.core.MDUnsupportedClassException;
 import multidimensionalvectors.core.MDUnsupportedTypeException;
 import multidimensionalvectors.core.MDVector;

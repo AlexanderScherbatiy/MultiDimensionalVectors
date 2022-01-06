@@ -2,3 +2,4 @@ rootProject.name = 'multidimensionalvectors'
 
 include 'multidimensionalvectors.core'
 include 'multidimensionalvectors.memory'
+include 'multidimensionalvectors.tests'
