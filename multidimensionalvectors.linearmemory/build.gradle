@@ -4,8 +4,6 @@ plugins {
 
 dependencies {
     implementation  project(':multidimensionalvectors.core')
-    implementation  project(':multidimensionalvectors.memory')
-    implementation  project(':multidimensionalvectors.linearmemory')
     testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
 }
 
