@@ -28,6 +28,22 @@ public abstract class MDAbstractVectorOperationCreateTest extends MDAbstractVect
     }
 
     @Test
+    public void testCreateZero100() {
+
+        int N = 1000;
+        int dimension = 10;
+
+        MDVectorOperation vectorOperation = getVectorOperation(dimension);
+
+        for (int n = 0; n < N; n++) {
+            MDVector vector = vectorOperation.create(new MDZeroVectorType(dimension));
+            for (int i = 0; i < dimension; i++) {
+                assertEquals(0.0, vectorOperation.getValue(vector, i), DELTA);
+            }
+        }
+    }
+
+    @Test
     public void testCreateUnit1() {
 
         MDVectorOperation vectorOperation = getVectorOperation(1);
