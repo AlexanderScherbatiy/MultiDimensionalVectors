@@ -12,6 +12,7 @@ import multidimensionalvectors.core.MDZeroVectorType;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -139,6 +140,7 @@ public class MDLinearMemoryVectorOperation implements MDVectorOperation {
         try {
             memoryBlocks.add(new MemoryBlock(base, dimension));
             freeMemorySize += dimension;
+            Arrays.fill(memory, base, base + dimension, 0.0);
         } finally {
             memoryBlocksLock.unlock();
         }
