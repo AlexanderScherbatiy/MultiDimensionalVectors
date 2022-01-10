@@ -16,17 +16,19 @@ public abstract class MDAbstractVectorOperationCreateTest extends MDAbstractVect
     public void testCreateZeroDimension1() {
 
         MDVectorOperation vectorOperation = getVectorOperation(1);
-        MDVector vector = vectorOperation.create(new MDZeroVectorType(1));
-        assertEquals(0.0, vectorOperation.getValue(vector, 0), DELTA);
+        try (MDVector vector = vectorOperation.create(new MDZeroVectorType(1))) {
+            assertEquals(0.0, vectorOperation.getValue(vector, 0), DELTA);
+        }
     }
 
     @Test
     public void testCreateZeroDimension2() {
 
         MDVectorOperation vectorOperation = getVectorOperation(2);
-        MDVector vector = vectorOperation.create(new MDZeroVectorType(2));
-        assertEquals(0.0, vectorOperation.getValue(vector, 0), DELTA);
-        assertEquals(0.0, vectorOperation.getValue(vector, 1), DELTA);
+        try (MDVector vector = vectorOperation.create(new MDZeroVectorType(2))) {
+            assertEquals(0.0, vectorOperation.getValue(vector, 0), DELTA);
+            assertEquals(0.0, vectorOperation.getValue(vector, 1), DELTA);
+        }
     }
 
     @Test
@@ -38,9 +40,10 @@ public abstract class MDAbstractVectorOperationCreateTest extends MDAbstractVect
         MDVectorOperation vectorOperation = getVectorOperation(dimension);
 
         for (int n = 0; n < N; n++) {
-            MDVector vector = vectorOperation.create(new MDZeroVectorType(dimension));
-            for (int i = 0; i < dimension; i++) {
-                assertEquals(0.0, vectorOperation.getValue(vector, i), DELTA);
+            try (MDVector vector = vectorOperation.create(new MDZeroVectorType(dimension))) {
+                for (int i = 0; i < dimension; i++) {
+                    assertEquals(0.0, vectorOperation.getValue(vector, i), DELTA);
+                }
             }
         }
     }
@@ -49,9 +52,9 @@ public abstract class MDAbstractVectorOperationCreateTest extends MDAbstractVect
     public void testCreateUnitDimension1() {
 
         MDVectorOperation vectorOperation = getVectorOperation(1);
-        MDVector vector = vectorOperation.create(new MDUnitVectorType(1, 0));
-
-        assertEquals(1.0, vectorOperation.getValue(vector, 0), DELTA);
+        try (MDVector vector = vectorOperation.create(new MDUnitVectorType(1, 0))) {
+            assertEquals(1.0, vectorOperation.getValue(vector, 0), DELTA);
+        }
     }
 
     @Test
@@ -59,13 +62,15 @@ public abstract class MDAbstractVectorOperationCreateTest extends MDAbstractVect
 
         MDVectorOperation vectorOperation = getVectorOperation(2);
 
-        MDVector vector1 = vectorOperation.create(new MDUnitVectorType(2, 0));
-        assertEquals(1.0, vectorOperation.getValue(vector1, 0), DELTA);
-        assertEquals(0.0, vectorOperation.getValue(vector1, 1), DELTA);
+        try (MDVector vector1 = vectorOperation.create(new MDUnitVectorType(2, 0))) {
+            assertEquals(1.0, vectorOperation.getValue(vector1, 0), DELTA);
+            assertEquals(0.0, vectorOperation.getValue(vector1, 1), DELTA);
+        }
 
-        MDVector vector2 = vectorOperation.create(new MDUnitVectorType(2, 1));
-        assertEquals(0.0, vectorOperation.getValue(vector2, 0), DELTA);
-        assertEquals(1.0, vectorOperation.getValue(vector2, 1), DELTA);
+        try (MDVector vector2 = vectorOperation.create(new MDUnitVectorType(2, 1))) {
+            assertEquals(0.0, vectorOperation.getValue(vector2, 0), DELTA);
+            assertEquals(1.0, vectorOperation.getValue(vector2, 1), DELTA);
+        }
     }
 
     @Test
@@ -79,9 +84,10 @@ public abstract class MDAbstractVectorOperationCreateTest extends MDAbstractVect
 
         for (int n = 0; n < N; n++) {
             int index = random.nextInt(dimension);
-            MDVector vector = vectorOperation.create(new MDUnitVectorType(dimension, index));
-            for (int i = 0; i < dimension; i++) {
-                assertEquals(i == index ? 1.0 : 0.0, vectorOperation.getValue(vector, i), DELTA);
+            try (MDVector vector = vectorOperation.create(new MDUnitVectorType(dimension, index))) {
+                for (int i = 0; i < dimension; i++) {
+                    assertEquals(i == index ? 1.0 : 0.0, vectorOperation.getValue(vector, i), DELTA);
+                }
             }
         }
     }

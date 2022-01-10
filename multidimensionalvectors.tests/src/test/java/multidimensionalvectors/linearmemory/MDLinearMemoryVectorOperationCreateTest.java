@@ -2,7 +2,6 @@ package multidimensionalvectors.linearmemory;
 
 import multidimensionalvectors.MDAbstractVectorOperationCreateTest;
 import multidimensionalvectors.core.MDVectorOperation;
-import multidimensionalvectors.memory.MDMemoryVectorOperation;
 
 public class MDLinearMemoryVectorOperationCreateTest extends MDAbstractVectorOperationCreateTest {
 

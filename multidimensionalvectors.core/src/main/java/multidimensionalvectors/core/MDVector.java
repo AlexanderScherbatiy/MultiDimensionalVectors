@@ -1,4 +1,4 @@
 package multidimensionalvectors.core;
 
-public interface MDVector {
+public interface MDVector extends MDAutoClosable {
 }

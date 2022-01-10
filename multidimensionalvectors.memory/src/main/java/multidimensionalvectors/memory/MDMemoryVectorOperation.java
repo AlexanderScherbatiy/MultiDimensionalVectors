@@ -45,5 +45,9 @@ public class MDMemoryVectorOperation implements MDVectorOperation {
         MDMemoryVector(int dimension) {
             values = new double[dimension];
         }
+
+        @Override
+        public void close() {
+        }
     }
 }
