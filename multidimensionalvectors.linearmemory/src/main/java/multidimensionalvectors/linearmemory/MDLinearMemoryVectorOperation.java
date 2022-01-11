@@ -1,6 +1,5 @@
 package multidimensionalvectors.linearmemory;
 
-import multidimensionalvectors.core.MDOutOfMemoryException;
 import multidimensionalvectors.core.MDUnitVectorType;
 import multidimensionalvectors.core.MDUnsupportedClassException;
 import multidimensionalvectors.core.MDUnsupportedTypeException;
@@ -9,31 +8,16 @@ import multidimensionalvectors.core.MDVectorOperation;
 import multidimensionalvectors.core.MDVectorType;
 import multidimensionalvectors.core.MDZeroVectorType;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 public class MDLinearMemoryVectorOperation implements MDVectorOperation {
 
-    private final int dimension;
-    private final double[] memory;
-
-    private int freeMemorySize;
-    private final List<MemoryBlock> memoryBlocks = new ArrayList<>();
+    private final MDLinearMemoryManager memoryManager;
 
     public MDLinearMemoryVectorOperation(int dimension) {
         this(dimension, 100_000);
     }
 
     public MDLinearMemoryVectorOperation(int dimension, int linearMemorySize) {
-        this.dimension = dimension;
-        this.memory = new double[linearMemorySize];
-        this.freeMemorySize = linearMemorySize;
-        memoryBlocks.add(new MemoryBlock(0, this.memory.length));
-    }
-
-    public int getDimension() {
-        return dimension;
+        this.memoryManager = new MDLinearMemoryManager(dimension, linearMemorySize);
     }
 
     @Override
@@ -49,7 +33,7 @@ public class MDLinearMemoryVectorOperation implements MDVectorOperation {
             MDLinearMemoryVector vector = createEmptyVector();
             int base = vector.base;
             int index = unitVectorType.getIndex();
-            memory[base + index] = 1.0;
+            memoryManager.setValue(base, index, 1.0);
             return vector;
         }
 
@@ -61,50 +45,13 @@ public class MDLinearMemoryVectorOperation implements MDVectorOperation {
         if (vector instanceof MDLinearMemoryVector) {
             MDLinearMemoryVector linearMemoryVector = (MDLinearMemoryVector) vector;
             int base = linearMemoryVector.base;
-            return memory[base + index];
+            return memoryManager.getValue(base, index);
         }
         throw new MDUnsupportedClassException(vector);
     }
 
     private MDLinearMemoryVector createEmptyVector() {
-        return new MDLinearMemoryVector(requestBase());
-    }
-
-    private int requestBase() {
-        if (memoryBlocks.isEmpty()) {
-            String msg = String.format("MDLinearMemory is empty (total memory: %d, free memory: %d)",
-                    memory.length, freeMemorySize);
-            throw new MDOutOfMemoryException(msg);
-        }
-
-        MemoryBlock memoryBlock = memoryBlocks.remove(0);
-        int base = memoryBlock.base;
-        int newBase = memoryBlock.base + dimension;
-        int newSize = memoryBlock.size - dimension;
-
-        if (newSize >= dimension) {
-            memoryBlocks.add(new MemoryBlock(newBase, newSize));
-        }
-
-        freeMemorySize -= dimension;
-        return base;
-    }
-
-    private void freeVector(int base) {
-        memoryBlocks.add(new MemoryBlock(base, dimension));
-        freeMemorySize += dimension;
-        Arrays.fill(memory, base, base + dimension, 0.0);
-    }
-
-    private static class MemoryBlock {
-
-        private final int base;
-        private final int size;
-
-        public MemoryBlock(int base, int size) {
-            this.base = base;
-            this.size = size;
-        }
+        return new MDLinearMemoryVector(memoryManager.requestBase());
     }
 
     private class MDLinearMemoryVector implements MDVector {
@@ -116,7 +63,7 @@ public class MDLinearMemoryVectorOperation implements MDVectorOperation {
 
         @Override
         public void close() {
-            freeVector(base);
+            memoryManager.freeVector(base);
         }
     }
 }

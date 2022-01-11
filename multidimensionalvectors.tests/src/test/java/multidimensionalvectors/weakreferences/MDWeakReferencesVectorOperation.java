@@ -1,6 +1,5 @@
 package multidimensionalvectors.weakreferences;
 
-import multidimensionalvectors.core.MDOutOfMemoryException;
 import multidimensionalvectors.core.MDUnitVectorType;
 import multidimensionalvectors.core.MDUnsupportedClassException;
 import multidimensionalvectors.core.MDUnsupportedTypeException;
@@ -8,12 +7,10 @@ import multidimensionalvectors.core.MDVector;
 import multidimensionalvectors.core.MDVectorOperation;
 import multidimensionalvectors.core.MDVectorType;
 import multidimensionalvectors.core.MDZeroVectorType;
+import multidimensionalvectors.linearmemory.MDLinearMemoryManager;
 
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
@@ -21,12 +18,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class MDWeakReferencesVectorOperation implements MDVectorOperation {
 
-    private final int dimension;
-    private final double[] memory;
-
-    private int freeMemorySize;
-    private final Lock memoryBlocksLock = new ReentrantLock();
-    private final List<MemoryBlock> memoryBlocks = new ArrayList<>();
+    private final Lock memoryLock = new ReentrantLock();
+    private final MDLinearMemoryManager memoryManager;
 
     private static final Set<MDVectorWeakReference> weakReferenceSet = ConcurrentHashMap.newKeySet();
     private static final ReferenceQueue<MDWeakReferenceVector> referenceQueue = new ReferenceQueue<>();
@@ -48,27 +41,19 @@ public class MDWeakReferencesVectorOperation implements MDVectorOperation {
     }
 
     public MDWeakReferencesVectorOperation(int dimension, int linearMemorySize) {
-        this.dimension = dimension;
-        this.memory = new double[linearMemorySize];
-        this.freeMemorySize = linearMemorySize;
-        memoryBlocksLock.lock();
+        memoryLock.lock();
         try {
-            memoryBlocks.add(new MemoryBlock(0, this.memory.length));
+            this.memoryManager = new MDLinearMemoryManager(dimension, linearMemorySize);
         } finally {
-            memoryBlocksLock.unlock();
+            memoryLock.unlock();
         }
-    }
-
-    public int getDimension() {
-        return dimension;
     }
 
     @Override
     public MDVector create(MDVectorType vectorType) {
 
         if (vectorType instanceof MDZeroVectorType) {
-            MDWeakReferenceVector vector = createEmptyVector();
-            return vector;
+            return createEmptyVector();
         }
 
         if (vectorType instanceof MDUnitVectorType) {
@@ -76,7 +61,7 @@ public class MDWeakReferencesVectorOperation implements MDVectorOperation {
             MDWeakReferenceVector vector = createEmptyVector();
             int base = vector.base;
             int index = unitVectorType.getIndex();
-            memory[base + index] = 1.0;
+            memoryManager.setValue(base, index, 1.0);
             return vector;
         }
 
@@ -88,57 +73,37 @@ public class MDWeakReferencesVectorOperation implements MDVectorOperation {
         if (vector instanceof MDWeakReferenceVector) {
             MDWeakReferenceVector linearMemoryVector = (MDWeakReferenceVector) vector;
             int base = linearMemoryVector.base;
-            return memory[base + index];
+            return memoryManager.getValue(base, index);
         }
         throw new MDUnsupportedClassException(vector);
     }
 
     private MDWeakReferenceVector createEmptyVector() {
 
-        MDWeakReferenceVector vector = new MDWeakReferenceVector(requestBase());
+        int base = -1;
+
+        memoryLock.lock();
+        try {
+            base = memoryManager.requestBase();
+        } finally {
+            memoryLock.unlock();
+        }
+
+        if (memoryManager.getFreeMemorySize() < 0.1 * memoryManager.getMemorySize()) {
+            System.gc();
+        }
+
+        MDWeakReferenceVector vector = new MDWeakReferenceVector(base);
         weakReferenceSet.add(new MDVectorWeakReference(vector, this));
         return vector;
     }
 
-    private int requestBase() {
-        boolean isLowSpace = false;
-        memoryBlocksLock.lock();
-        try {
-
-            if (memoryBlocks.isEmpty()) {
-                String msg = String.format("MDLinearMemory is empty (total memory: %d, free memory: %d)",
-                        memory.length, freeMemorySize);
-                throw new MDOutOfMemoryException(msg);
-            }
-
-            MemoryBlock memoryBlock = memoryBlocks.remove(0);
-            int base = memoryBlock.base;
-            int newBase = memoryBlock.base + dimension;
-            int newSize = memoryBlock.size - dimension;
-
-            if (newSize >= dimension) {
-                memoryBlocks.add(new MemoryBlock(newBase, newSize));
-            }
-
-            freeMemorySize -= dimension;
-            isLowSpace = (freeMemorySize < 0.1 * memory.length);
-            return base;
-        } finally {
-            memoryBlocksLock.unlock();
-            if (isLowSpace) {
-                System.gc();
-            }
-        }
-    }
-
     private void freeVector(int base) {
-        memoryBlocksLock.lock();
+        memoryLock.lock();
         try {
-            memoryBlocks.add(new MemoryBlock(base, dimension));
-            freeMemorySize += dimension;
-            Arrays.fill(memory, base, base + dimension, 0.0);
+            memoryManager.freeVector(base);
         } finally {
-            memoryBlocksLock.unlock();
+            memoryLock.unlock();
         }
     }
 
@@ -155,18 +120,6 @@ public class MDWeakReferencesVectorOperation implements MDVectorOperation {
 
         private void freeVector() {
             vectorOperation.freeVector(base);
-        }
-    }
-
-
-    private static class MemoryBlock {
-
-        private final int base;
-        private final int size;
-
-        public MemoryBlock(int base, int size) {
-            this.base = base;
-            this.size = size;
         }
     }
 
