@@ -8,11 +8,11 @@ import java.util.List;
 
 public class MDLinearMemoryManager {
 
-    private final int dimension;
-    private final double[] memory;
+    final int dimension;
+    final double[] memory;
 
-    private int freeMemorySize;
-    private final List<MemoryBlock> memoryBlocks = new ArrayList<>();
+    int freeMemorySize;
+    final List<MemoryBlock> memoryBlocks = new ArrayList<>();
 
     public MDLinearMemoryManager(int dimension, int memorySize) {
         this.dimension = dimension;
@@ -65,7 +65,7 @@ public class MDLinearMemoryManager {
     }
 
 
-    private static class MemoryBlock {
+    static class MemoryBlock {
 
         int base;
         int size;
